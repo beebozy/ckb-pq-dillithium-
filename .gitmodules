@@ -1,0 +1,3 @@
+[submodule "deps/lib-dummy-atomics"]
+	path = deps/lib-dummy-atomics
+	url = https://github.com/xxuejie/lib-dummy-atomics
