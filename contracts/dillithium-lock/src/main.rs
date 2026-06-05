@@ -48,7 +48,7 @@ fn blake2b_256(data: &[u8]) -> [u8; 32] {
 fn program_entry() -> i8 {
     debug!("dilithium-lock: starting");
 
-    // Step 1: Load args — expected to be 32-byte blake2b hash of pubkey
+    //  Load args — expected to be 32-byte blake2b hash of pubkey
     let script = match load_script() {
         Ok(s) => s,
         Err(_) => return ERR_INVALID_ARGS_LENGTH,
@@ -59,13 +59,13 @@ fn program_entry() -> i8 {
         return ERR_INVALID_ARGS_LENGTH;
     }
 
-    // Step 2: Load tx hash
+    //  Load tx hash
     let tx_hash = match load_tx_hash() {
         Ok(h) => h,
         Err(_) => return ERR_INVALID_WITNESS,
     };
 
-    // Step 3: Load witness
+    //  Load witness
     let witness_args = match load_witness_args(0, Source::GroupInput) {
         Ok(w) => w,
         Err(_) => return ERR_INVALID_WITNESS,
@@ -75,20 +75,20 @@ fn program_entry() -> i8 {
         None => return ERR_INVALID_WITNESS,
     };
 
-    // Step 4: Parse witness into pubkey + sig
+    // Parse witness into pubkey + sig
     let (raw_pubkey, raw_sig) = match parse_witness(&lock_field) {
         Some(pair) => pair,
         None => return ERR_INVALID_WITNESS,
     };
 
-    // Step 5: Verify pubkey hash matches args
+    //  Verify pubkey hash matches args
     let pubkey_hash = blake2b_256(raw_pubkey);
     if pubkey_hash != args_raw.as_ref() {
         debug!("dilithium-lock: pubkey hash mismatch");
         return ERR_PUBKEY_HASH_MISMATCH;
     }
 
-    // Step 6: Decode public key
+    //  Decode public key
     if raw_pubkey.len() != PUBKEY_BYTES {
         return ERR_INVALID_PUBKEY;
     }
@@ -101,7 +101,7 @@ fn program_entry() -> i8 {
         Err(_) => return ERR_INVALID_PUBKEY,
     };
 
-    // Step 7: Decode signature — in fips204 v0.4 it's a raw byte array
+    //  Decode signature — in fips204 v0.4 it's a raw byte array
     if raw_sig.len() != SIG_BYTES {
         return ERR_INVALID_SIGNATURE;
     }
@@ -110,7 +110,7 @@ fn program_entry() -> i8 {
         Err(_) => return ERR_INVALID_SIGNATURE,
     };
 
-    // Step 8: Verify signature
+    //  Verify signature
     if !public_key.verify(&tx_hash, &sig_array, &[]) {
         debug!("dilithium-lock: verification failed");
         return ERR_SIGNATURE_VERIFICATION;
