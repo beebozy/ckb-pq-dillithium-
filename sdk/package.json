@@ -1,0 +1,27 @@
+{
+  "name": "@ckb/dillithium-sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:ts": "tsc -p tsconfig.json",
+    "build:wasm:asset": "node ./scripts/copy-wasm.mjs",
+    "build": "npm run build:ts && npm run build:wasm:asset",
+    "prepack": "npm run build",
+    "test": "npm run build && node --test dist/test/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.1",
+    "typescript": "^5.8.3"
+  }
+}
