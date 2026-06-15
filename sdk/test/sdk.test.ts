@@ -12,7 +12,7 @@ import {
   parseWitnessLock,
   signTxHash,
   verifySignature,
-} from "../src/index.js";
+} from "../index.js";
 
 const txHash = new Uint8Array(Array.from({ length: 32 }, (_, index) => index + 1));
 

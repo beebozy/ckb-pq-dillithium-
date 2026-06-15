@@ -1,17 +1,46 @@
 {
   "name": "@ckb/dillithium-sdk",
   "version": "0.1.0",
+  "description": "Node.js SDK for the CKB Dilithium lock script: ML-DSA-65 key generation, lock args derivation, transaction hash signing, and witness serialization.",
   "type": "module",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beebozy/ckb-pq-dillithium-.git",
+    "directory": "sdk"
+  },
+  "homepage": "https://github.com/beebozy/ckb-pq-dillithium-#readme",
+  "bugs": {
+    "url": "https://github.com/beebozy/ckb-pq-dillithium-/issues"
+  },
+  "keywords": [
+    "ckb",
+    "nervos",
+    "dilithium",
+    "ml-dsa",
+    "post-quantum",
+    "cryptography",
+    "wasm",
+    "typescript",
+    "sdk"
   ],
   "scripts": {
     "build:ts": "tsc -p tsconfig.json",

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { LOCK_ARGS_LEN, PUBLIC_KEY_LEN, SECRET_KEY_LEN, SIGNATURE_LEN, buildWitnessLock, computeLockArgs, generateKeypair, parseWitnessLock, signTxHash, verifySignature, } from "../src/index.js";
+import { LOCK_ARGS_LEN, PUBLIC_KEY_LEN, SECRET_KEY_LEN, SIGNATURE_LEN, buildWitnessLock, computeLockArgs, generateKeypair, parseWitnessLock, signTxHash, verifySignature, } from "../index.js";
 const txHash = new Uint8Array(Array.from({ length: 32 }, (_, index) => index + 1));
 test("generateKeypair returns correctly sized keys", async () => {
     const keypair = await generateKeypair();
