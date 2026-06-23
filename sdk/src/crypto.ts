@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { PUBLIC_KEY_LEN, SECRET_KEY_LEN, SIGNATURE_LEN } from "./constants.js";
+import { LOCK_ARGS_LEN, PUBLIC_KEY_LEN, SECRET_KEY_LEN, SIGNATURE_LEN } from "./constants.js";
 import { toBytes } from "./util.js";
 import type { ByteLike, DilithiumKeypair } from "./types.js";
 
@@ -24,6 +24,7 @@ interface WasmExports {
   args_len(): number;
   generate_keypair_from_seed(seedPtr: number, seedLen: number, publicKeyOutPtr: number, secretKeyOutPtr: number): number;
   hash_pubkey(pubkeyPtr: number, pubkeyLen: number, outPtr: number): number;
+  ckb_hash(dataPtr: number, dataLen: number, outPtr: number): number;
   sign_message_with_seed(secretKeyPtr: number, secretKeyLen: number, messagePtr: number, messageLen: number, seedPtr: number, seedLen: number, outPtr: number): number;
   verify_signature(publicKeyPtr: number, publicKeyLen: number, messagePtr: number, messageLen: number, signaturePtr: number, signatureLen: number): number;
 }
@@ -31,6 +32,7 @@ interface WasmExports {
 export interface WasmApi {
   generateKeypair(): DilithiumKeypair;
   hashPubkey(publicKey: Uint8Array): Uint8Array;
+  ckbHash(data: Uint8Array): Uint8Array;
   signMessage(secretKey: Uint8Array, message: Uint8Array): Uint8Array;
   verifySignature(publicKey: Uint8Array, message: Uint8Array, signature: Uint8Array): boolean;
 }
@@ -106,6 +108,20 @@ async function instantiateWasm(): Promise<WasmApi> {
         exports.dealloc(outputPtr, exports.args_len());
       }
     },
+    ckbHash(data: Uint8Array): Uint8Array {
+      const outputPtr = exports.alloc(exports.args_len());
+      try {
+        return withInput(exports, data, (dataPtr) => {
+          const status = exports.ckb_hash(dataPtr, data.length, outputPtr);
+          if (status !== 0) {
+            encodeError(status);
+          }
+          return readBytes(exports.memory, outputPtr, exports.args_len());
+        }) as Uint8Array;
+      } finally {
+        exports.dealloc(outputPtr, exports.args_len());
+      }
+    },
     signMessage(secretKey: Uint8Array, message: Uint8Array): Uint8Array {
       const seed = randomBytes(32);
       const outputPtr = exports.alloc(exports.sig_len());
@@ -167,6 +183,16 @@ export async function getWasmApi(): Promise<WasmApi> {
 export async function generateKeypair(): Promise<DilithiumKeypair> {
   const api = await getWasmApi();
   return api.generateKeypair();
+}
+
+export async function ckbHash(data: ByteLike): Promise<Uint8Array> {
+  const dataBytes = toBytes(data);
+  const api = await getWasmApi();
+  const output = api.ckbHash(dataBytes);
+  if (output.length !== LOCK_ARGS_LEN) {
+    throw new Error(`CKB hash must be ${LOCK_ARGS_LEN} bytes`);
+  }
+  return output;
 }
 
 export async function signTxHash(secretKey: ByteLike, txHash: ByteLike): Promise<Uint8Array> {

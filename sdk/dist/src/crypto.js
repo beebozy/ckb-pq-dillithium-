@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PUBLIC_KEY_LEN, SECRET_KEY_LEN, SIGNATURE_LEN } from "./constants.js";
+import { LOCK_ARGS_LEN, PUBLIC_KEY_LEN, SECRET_KEY_LEN, SIGNATURE_LEN } from "./constants.js";
 import { toBytes } from "./util.js";
 const ERRORS = {
     1: "invalid input length",
@@ -79,6 +79,21 @@ async function instantiateWasm() {
                 exports.dealloc(outputPtr, exports.args_len());
             }
         },
+        ckbHash(data) {
+            const outputPtr = exports.alloc(exports.args_len());
+            try {
+                return withInput(exports, data, (dataPtr) => {
+                    const status = exports.ckb_hash(dataPtr, data.length, outputPtr);
+                    if (status !== 0) {
+                        encodeError(status);
+                    }
+                    return readBytes(exports.memory, outputPtr, exports.args_len());
+                });
+            }
+            finally {
+                exports.dealloc(outputPtr, exports.args_len());
+            }
+        },
         signMessage(secretKey, message) {
             const seed = randomBytes(32);
             const outputPtr = exports.alloc(exports.sig_len());
@@ -116,6 +131,15 @@ export async function getWasmApi() {
 export async function generateKeypair() {
     const api = await getWasmApi();
     return api.generateKeypair();
+}
+export async function ckbHash(data) {
+    const dataBytes = toBytes(data);
+    const api = await getWasmApi();
+    const output = api.ckbHash(dataBytes);
+    if (output.length !== LOCK_ARGS_LEN) {
+        throw new Error(`CKB hash must be ${LOCK_ARGS_LEN} bytes`);
+    }
+    return output;
 }
 export async function signTxHash(secretKey, txHash) {
     const secretKeyBytes = toBytes(secretKey);
